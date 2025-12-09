@@ -35,4 +35,4 @@ Environment variables:
 - `RASPBERRY_HOST` default: `0.0.0.0`
 - `RASPBERRY_PORT` default: 5555
 - `RASPBERRY_SERVER_NAME` default: "Raspberry chat server"
-
+- `RASPBERRY_DEFAULT_CHANNEL` default: "general"
