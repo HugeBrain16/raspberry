@@ -76,6 +76,7 @@ class Client extends Thread {
     public void run() {
         try {
             server.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
+            updateMessage("Server", "type /help to see all available commands");
 
             while (!server.server.isClosed()) {
                 BufferedReader streamIn = getReader();
