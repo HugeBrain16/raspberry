@@ -1,5 +1,7 @@
 # Raspberry
 
+![screens](https://i.imgur.com/sbK6k7y.jpeg)
+
 A tiny raw socket chat server (made for netcat)
 
 > [!TIP]
@@ -8,9 +10,9 @@ A tiny raw socket chat server (made for netcat)
 Features:
 - Basic chat functionality
 - Choose username (supports user mention highlight f.e. @user)
-- Join any channel (/join <channel>)
-- Color customization (/color <color>)
-- Whisper to a user (/whisper <user>)
+- Join any channel (`/join channel>`)
+- Color customization (`/color <color>`)
+- Whisper to a user (`/whisper <user>`)
 
 ## How to run/build
 
@@ -26,3 +28,11 @@ gradle run
 ./gradlew shadowJar
 java -jar app/build/libs/raspberry.jar
 ```
+
+## Configurations
+
+Environment variables:
+- `RASPBERRY_HOST` default: `0.0.0.0`
+- `RASPBERRY_PORT` default: 5555
+- `RASPBERRY_SERVER_NAME` default: "Raspberry chat server"
+
