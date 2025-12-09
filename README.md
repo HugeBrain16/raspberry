@@ -1,0 +1,28 @@
+# Raspberry
+
+A tiny raw socket chat server (made for netcat)
+
+> [!TIP]
+> Run netcat (nc) with **rlwrap** for the best experience `rlwrap nc <host> <port>`
+
+Features:
+- Basic chat functionality
+- Choose username (supports user mention highlight f.e. @user)
+- Join any channel (/join <channel>)
+- Color customization (/color <color>)
+- Whisper to a user (/whisper <user>)
+
+## How to run/build
+
+Requires Java 9+
+
+### Run in project environment
+```sh
+gradle run
+```
+
+### Build & run jar
+```sh
+./gradlew shadowJar
+java -jar app/build/libs/raspberry.jar
+```
