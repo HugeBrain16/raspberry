@@ -2,9 +2,10 @@ package org.hugebrain16;
 
 import java.io.*;
 import java.net.*;
-import java.util.Vector;
 import java.util.regex.Pattern;
-import java.util.HashMap;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer;
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer.*;
 
@@ -23,7 +24,8 @@ class Client extends Thread {
     Color cmdMessageColor = null;
     Mode mode = Mode.CHAT;
     String whisper = null;
-    HashMap<String, Vector<Message>> channels = new HashMap<String, Vector<Message>>();
+    long lastMessage = System.currentTimeMillis();
+    ConcurrentHashMap<String, CopyOnWriteArrayList<Message>> channels = new ConcurrentHashMap<String, CopyOnWriteArrayList<Message>>();
     private BufferedReader _reader = null;
     private PrintWriter _writer = null;
 
@@ -59,8 +61,19 @@ class Client extends Thread {
         cmdMessageColor = null;
     }
 
-    void updateMessage(String sender, String message) {
-        channels.get(channel).add(new Message(sender, message));
+    void updateMessage(String sender, String content) {
+        int maxBuffer;
+        try {
+            maxBuffer = Integer.parseInt(System.getenv("RASPBERRY_MESSAGE_FREE_THRESHOLD")); // default: 50
+        } catch(NumberFormatException e) {
+            maxBuffer = 50;
+        }
+
+        CopyOnWriteArrayList<Message> message = channels.get(channel);
+        if (message.size() > maxBuffer)
+            message.remove(0);
+
+        message.add(new Message(sender, content));
         server.syncClient(this, channel);
     }
 
@@ -75,6 +88,16 @@ class Client extends Thread {
 
     public void run() {
         try {
+            int maxMessage;
+            long maxRate;
+            try {
+                maxMessage = Integer.parseInt(System.getenv("RASPBERRY_MAX_MESSAGE_LENGTH")); // default: 256
+                maxRate = Long.parseLong(System.getenv("RASPBERRY_MAX_MESSAGE_RATE")); // default: 100ms
+            } catch(NumberFormatException e) {
+                maxMessage = 256;
+                maxRate = 100;
+            }
+
             server.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
             updateMessage("Server", "type /help to see all available commands");
 
@@ -82,11 +105,22 @@ class Client extends Thread {
                 BufferedReader streamIn = getReader();
 
                 String message = streamIn.readLine();
+                long now = System.currentTimeMillis();
+                if (now - lastMessage < maxRate) {
+                    sendCmdMessage("Slow down!", Color.RED);
+                    continue;
+                }
+                lastMessage = now;
+
                 if (message == null)
                     break;
 
                 if (!message.trim().isEmpty()) {
                     message = message.trim();
+
+                    if (message.length() > maxMessage) {
+                        message = message.substring(0, maxMessage);
+                    }
 
                     if (message.startsWith("/")) {
                         String[] cmd = message.split(" ");
@@ -225,7 +259,7 @@ class Message {
 class Server {
     ServerSocket server;
     String name;
-    HashMap<String, Vector<Message>> channels = new HashMap<String, Vector<Message>>();
+    ConcurrentHashMap<String, CopyOnWriteArrayList<Message>> channels = new ConcurrentHashMap<String, CopyOnWriteArrayList<Message>>();
     Vector<Client> clients = new Vector<Client>();
 
     Server(int port) throws IOException {
@@ -256,8 +290,8 @@ class Server {
         return null;
     }
 
-    Vector<Message> cloneMessages(String channel) {
-        Vector<Message> clone = new Vector<>();
+    CopyOnWriteArrayList<Message> cloneMessages(String channel) {
+        CopyOnWriteArrayList<Message> clone = new CopyOnWriteArrayList<Message>();
         for (Message message : channels.get(channel)) {
             clone.add(new Message(message));
         }
@@ -266,15 +300,31 @@ class Server {
     }
 
     void updateMessage(String channel, String sender, String content) {
+        int maxBuffer;
+        try {
+            maxBuffer = Integer.parseInt(System.getenv("RASPBERRY_MESSAGE_FREE_THRESHOLD")); // default: 50
+        } catch(NumberFormatException e) {
+            maxBuffer = 50;
+        }
+        
         if (!channels.containsKey(channel))
-            channels.put(channel, new Vector<Message>());
+            channels.put(channel, new CopyOnWriteArrayList<Message>());
 
-        this.channels.get(channel).add(new Message(sender, content));
+        CopyOnWriteArrayList<Message> message = this.channels.get(channel);
+        if (message.size() > maxBuffer)
+            message.remove(0);
+
+        message.add(new Message(sender, content));
         for (Client client : clients) {
             if (!client.channels.containsKey(channel))
                 client.channels.put(channel, cloneMessages(channel));
-            else
-                client.channels.get(channel).add(new Message(sender, content));
+            else {
+                message = client.channels.get(channel);
+                if (message.size() > maxBuffer)
+                    message.remove(0);
+                
+                message.add(new Message(sender, content));
+            }
             syncClient(client, channel);
         }
     }
@@ -335,10 +385,17 @@ class Incoming extends Thread {
 
     public void run() {
         String channel = System.getenv("RASPBERRY_DEFAULT_CHANNEL"); // default: general
-        
+        int maxUsername;
+        try {
+            maxUsername = Integer.parseInt(System.getenv("RASPBERRY_MAX_USERNAME_LENGTH")); // default: 16
+        } catch(NumberFormatException e) {
+            maxUsername = 16;
+        }
+
         try {
             boolean nameCheck = false;
             boolean nameValid = false;
+            boolean nameLength = false;
             while (client.username == null) {
                 PrintWriter streamOut = client.getWriter();
                 client.clearScreen(streamOut);
@@ -352,6 +409,11 @@ class Incoming extends Thread {
                     nameCheck = false;
                 } 
 
+                if (nameLength) {
+                    streamOut.write(Colorizer.color(String.format("Username is too long! max: %d characters\n\n", maxUsername), Color.RED));
+                    nameLength = false;
+                }
+
                 streamOut.write(String.format("%s (Raspberry v%s)\nEnter username: ", server.name != null ? server.name : "Raspberry chat server", App.version));
                 streamOut.flush();
 
@@ -363,6 +425,11 @@ class Incoming extends Thread {
 
                 if (!username.matches("^[a-zA-Z0-9_\\-\\.]+$")) {
                     nameValid = true;
+                    continue;
+                }
+
+                if (username.length() > maxUsername) {
+                    nameLength = true;
                     continue;
                 }
 
