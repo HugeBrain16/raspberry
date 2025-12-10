@@ -2,6 +2,7 @@ package org.hugebrain16;
 
 import java.io.*;
 import java.net.*;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -414,7 +415,7 @@ class Incoming extends Thread {
                     nameLength = false;
                 }
 
-                streamOut.write(String.format("%s (Raspberry v%s)\nEnter username: ", server.name != null ? server.name : "Raspberry chat server", App.version));
+                streamOut.write(String.format("%s (Raspberry v%s)\nEnter username: ", server.name != null ? server.name : "Raspberry chat server", App.getVersion()));
                 streamOut.flush();
 
                 BufferedReader streamIn = client.getReader();
@@ -458,7 +459,13 @@ class Incoming extends Thread {
 }
 
 public class App extends Thread {
-    public static String version = "0.1.0";
+
+    public static String getVersion() throws IOException {
+        Properties props = new Properties();
+        props.load(App.class.getResourceAsStream("/raspberry.properties"));
+
+        return props.getProperty("version");
+    }
 
     public static void main(String[] args) {
         try {

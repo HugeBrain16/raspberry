@@ -1,15 +1,17 @@
 plugins {
-    java
-    application
-    id("com.gradleup.shadow") version "8.3.9"
+    id "java"
+    id "application"
+    id "com.gradleup.shadow" version "8.3.9"
 }
+
+def appVersion = version
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.github.kamilszewc:java-ansi-text-colorizer:1.5")
+    implementation "io.github.kamilszewc:java-ansi-text-colorizer:1.5"
 }
 
 java {
@@ -21,9 +23,17 @@ application {
     mainClass.set("org.hugebrain16.App")
 }
 
+processResources {
+    inputs.property "version", appVersion
+    filesMatching("**/*.properties") {
+        expand(version: appVersion)
+    }
+}
+
 tasks.shadowJar {
     archiveBaseName.set("raspberry")
     archiveClassifier.set("")
+    archiveVersion.set(appVersion.toString())
     manifest {
         attributes["Main-Class"] = "org.hugebrain16.App"
     }
