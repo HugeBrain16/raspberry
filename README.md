@@ -16,11 +16,11 @@ Features:
 
 ## How to run/build
 
-Requires Java 9+
+Requires Java 8+
 
 ### Run in project environment
 ```sh
-gradle run
+./gradlew run
 ```
 
 ### Build & run jar
