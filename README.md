@@ -20,7 +20,7 @@ Requires Java 8+
 
 ### Run in project environment
 ```sh
-./gradlew run
+./gradlew run --no-daemon
 ```
 
 ### Build & run jar
@@ -41,3 +41,5 @@ Environment variables:
 - `RASPBERRY_MAX_MESSAGE_RATE` default: 100 (ms)
 - `RASPBERRY_MESSAGE_FREE_THRESHOLD` default: 50
 - `RASPBERRY_TIMESTAMP_FORMAT` default: "dd-MM-yyyy HH:mm:ss"
+- `RASPBERRY_MOTD` path to motd file
+- `RASPBERRY_RCON_PASSWORD` set this to allow RCON connection
