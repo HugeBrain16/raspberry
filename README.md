@@ -29,6 +29,13 @@ Requires Java 8+
 java -jar app/build/libs/raspberry.jar
 ```
 
+## How to connect to RCON
+
+> [!IMPORTANT]
+> RCON login is disabled if RASPBERRY_RCON_PASSWORD is not set.
+
+Connect to the server normally. When asked for username, type "rcon" (case insensitive). Enter RCON password.
+
 ## Configurations
 
 Environment variables:
@@ -42,4 +49,4 @@ Environment variables:
 - `RASPBERRY_MESSAGE_FREE_THRESHOLD` default: 50
 - `RASPBERRY_TIMESTAMP_FORMAT` default: "dd-MM-yyyy HH:mm:ss"
 - `RASPBERRY_MOTD` path to motd file
-- `RASPBERRY_RCON_PASSWORD` set this to allow RCON connection
+- `RASPBERRY_RCON_PASSWORD` set this to allow RCON login
