@@ -230,9 +230,14 @@ public class Client extends Thread {
                             server.updateMessage(channel, Util.paint(username, color), message);
                         } else if (mode == Mode.WHISPER) {
                             Client target = server.getClientByUsername(whisper, channel);
-
-                            updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
-                            target.updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
+                            if (target != null) {
+                                updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
+                                target.updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
+                            } else {
+                                sendCmdMessage("Can't no longer reach the target, whisper disabled.", Color.YELLOW);
+                                mode = Mode.WHISPER;
+                                whisper = null;
+                            }
                         }
                     }
                 }
@@ -244,6 +249,12 @@ public class Client extends Thread {
             server.clients.remove(this);
         } catch(Exception e) {
             System.out.printf("Client thread error: %s\n", e.getMessage() != null ? e.getMessage() : e);
+        } finally {
+            server.clients.remove(this);
+            try {
+                socket.close();
+            } catch (Exception e) {}
+            server.updateMessage(channel, "Server", String.format("%s has left the chat", username));
         }
     }
 }
