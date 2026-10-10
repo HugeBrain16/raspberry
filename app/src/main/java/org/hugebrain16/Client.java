@@ -190,9 +190,10 @@ public class Client extends Thread {
                                 } else
                                     sendCmdMessage("User not found! make sure you are in the same channel", Color.YELLOW);
                             } else {
-                                if (whisper != null && mode == Mode.WHISPER) {
+                                if (mode == Mode.WHISPER) {
                                     whisper = null;
                                     mode = Mode.CHAT;
+                                    sendCmdMessage("", Color.YELLOW); // force sync
                                 } else
                                     sendCmdMessage("Usage: /whisper <user>", Color.YELLOW);
                             }
