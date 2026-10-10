@@ -5,6 +5,8 @@ import java.net.*;
 import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.Vector;
+import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.time.LocalDateTime;
@@ -18,12 +20,44 @@ enum Mode {
     WHISPER
 }
 
+class Util {
+    public static final HashMap<String, BackgroundColor> BackgroundColors = new HashMap<>();
+    public static final Random random = new Random();
+
+    static {
+        BackgroundColors.put("green", BackgroundColor.GREEN);
+        BackgroundColors.put("yellow", BackgroundColor.YELLOW);
+        BackgroundColors.put("cyan", BackgroundColor.CYAN);
+        BackgroundColors.put("magenta", BackgroundColor.MAGENTA);
+        BackgroundColors.put("red", BackgroundColor.RED);
+        BackgroundColors.put("blue", BackgroundColor.BLUE);
+        BackgroundColors.put("white", BackgroundColor.WHITE);
+        BackgroundColors.put("black", BackgroundColor.BLACK);
+    }
+
+    public static BackgroundColor randomBackgroundColor() {
+        return new Vector<>(BackgroundColors.values()).get(random.nextInt(BackgroundColors.size()));
+    };
+
+    public static String paint(String string, BackgroundColor color) {
+        String result = color.toString();
+        switch (color) {
+            case WHITE:
+                return result += (Color.BLACK + string) + Color.RESET;
+            case BLACK:
+                return result += (Color.WHITE + string) + Color.RESET;
+            default:
+                return result += string + Color.RESET;
+        }
+    }
+}
+
 class Client extends Thread {
     Socket socket;
     Server server;
     String username = null;
     String channel = null;
-    BackgroundColor color = BackgroundColor.GREEN;
+    BackgroundColor color = Util.randomBackgroundColor();
     String cmdMessage = null;
     Color cmdMessageColor = null;
     Mode mode = Mode.CHAT;
@@ -195,31 +229,23 @@ class Client extends Thread {
                             if (cmd.length > 1) {
                                 BackgroundColor prevColor = color;
 
-                                switch (cmd[1].toLowerCase()) {
-                                    case "green":
-                                        color = BackgroundColor.GREEN;
-                                        break;
-                                    case "yellow":
-                                        color = BackgroundColor.YELLOW;
-                                        break;
-                                    case "cyan":
-                                        color = BackgroundColor.CYAN;
-                                        break;
-                                    case "magenta":
-                                        color = BackgroundColor.MAGENTA;
-                                        break;
-                                    case "red":
-                                        color = BackgroundColor.RED;
-                                        break;
-                                    case "blue":
-                                        color = BackgroundColor.BLUE;
-                                        break;
-                                    case "white":
-                                        color = BackgroundColor.WHITE;
-                                        break;
-                                    default:
+                                if (cmd[1].equals("random"))
+                                    color = Util.randomBackgroundColor();
+                                else if (cmd[1].equals("list")) {
+                                    String list = "";
+                                    for (int i = 0; i < Util.BackgroundColors.size(); i++) {
+                                        String key = new Vector<>(Util.BackgroundColors.keySet()).get(i);
+                                        BackgroundColor col = new Vector<>(Util.BackgroundColors.values()).get(i);
+
+                                        list += "- " + Util.paint(key, col) + "\n";
+                                    }
+                                    sendCmdMessage(list, Color.WHITE);
+                                } else {
+                                    BackgroundColor newColor = Util.BackgroundColors.get(cmd[1]);
+                                    if (newColor == null)
                                         sendCmdMessage("Unknown color: " + cmd[1], Color.RED);
-                                        break;
+                                    else
+                                        color = newColor;
                                 }
 
                                 if (prevColor != color)
@@ -230,12 +256,12 @@ class Client extends Thread {
                             sendCmdMessage("Unknown command: " + cmd[0], Color.YELLOW);
                     } else {
                         if (mode == Mode.CHAT) {
-                            server.updateMessage(channel, Colorizer.color(username, color), message);
+                            server.updateMessage(channel, Util.paint(username, color), message);
                         } else if (mode == Mode.WHISPER) {
                             Client target = server.getClientByUsername(whisper, channel);
 
-                            updateMessage(String.format("[whisper] %s", Colorizer.color(username, color)), message);
-                            target.updateMessage(String.format("[whisper] %s", Colorizer.color(username, color)), message);
+                            updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
+                            target.updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
                         }
                     }
                 }
@@ -384,7 +410,7 @@ class Server {
         messages = messages + String.format("\n\n\n%s%s(%s) [#%s (online: %s)]\nType your message: ",
             client.cmdMessage != null ? client.cmdMessageColor != null ? Colorizer.color(client.cmdMessage + "\n", client.cmdMessageColor) : client.cmdMessage + "\n" : "",
             client.getModeString() != null ? client.getModeString() : "",
-            Colorizer.color(client.username, client.color), channel,
+            Util.paint(client.username, client.color), channel,
             Colorizer.color(Integer.toString(getChannelPeerCount(channel)), Color.GREEN));
             
         try {
