@@ -61,8 +61,6 @@ public class Client extends Thread {
         cmdMessage = message;
         cmdMessageColor = color;
         server.syncClient(this, channel);
-        cmdMessage = null;
-        cmdMessageColor = null;
     }
 
     void updateMessage(String sender, String content) {
@@ -151,6 +149,8 @@ public class Client extends Thread {
                         } else if (cmd[0].equals("/timestamp")) {
                             showTimestamp = !showTimestamp;
                             server.syncClient(this, channel);
+                        } else if (cmd[0].equals("/refresh")) {
+                            sendCmdMessage("", Color.YELLOW);
                         } else if (cmd[0].equals("/help")) {
                             String help = "List available commands:\n";
                             help += "- /help\n";
@@ -165,6 +165,8 @@ public class Client extends Thread {
                             help += "\tchange name color\n";
                             help += "- /timestamp\n";
                             help += "\ttoggle messages timestamp\n";
+                            help += "- /refresh\n";
+                            help += "\trefresh the buffer (use if text glitches occur)\n";
                             help += "- /quit\n";
                             help += "\tleave chat and disconnect\n";
                             sendCmdMessage(help, Color.GREEN);
@@ -240,6 +242,10 @@ public class Client extends Thread {
                                 whisper = null;
                             }
                         }
+
+                        cmdMessage = null;
+                        cmdMessageColor = null;
+                        sendCmdMessage("", Color.YELLOW);
                     }
                 }
             }
