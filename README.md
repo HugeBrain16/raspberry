@@ -2,10 +2,10 @@
 
 ![screens](https://i.imgur.com/sbK6k7y.jpeg)
 
-A tiny raw socket chat server (made for netcat)
+A tiny TCP chat server (made for use with netcat/ncat/socat and other similar tools)
 
 > [!TIP]
-> Run netcat (nc) with **rlwrap** for the best experience `rlwrap nc <host> <port>`
+> It's recommended to run any client through **rlwrap** for the best experience. For example with netcat `rlwrap nc <host> <port>`
 
 Features:
 - Basic chat functionality (multi-threaded)
@@ -13,6 +13,15 @@ Features:
 - Join any channel (`/join channel>`)
 - Color customization (`/color <color>`)
 - Whisper to a user (`/whisper <user>`)
+
+## How to connect
+
+- netcat: `nc <host> <port>`
+- socat: `socat - TCP:<host>:<port>`
+- ncat: `ncat <host> <port>`
+- telnet: `telnet <host> <port>`
+- curl: `curl --no-progress-meter -N -T . telnet://<host>:<port>`
+- websocat: `websocat --exit-on-eof - tcp:<host>:<port>`
 
 ## How to run/build
 
