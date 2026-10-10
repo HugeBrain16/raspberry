@@ -7,6 +7,9 @@ import java.util.regex.Pattern;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer;
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer.*;
 
@@ -25,6 +28,7 @@ class Client extends Thread {
     Color cmdMessageColor = null;
     Mode mode = Mode.CHAT;
     String whisper = null;
+    boolean showTimestamp = false;
     long lastMessage = System.currentTimeMillis();
     ConcurrentHashMap<String, CopyOnWriteArrayList<Message>> channels = new ConcurrentHashMap<String, CopyOnWriteArrayList<Message>>();
     private BufferedReader _reader = null;
@@ -139,20 +143,25 @@ class Client extends Thread {
                                 sendCmdMessage("Usage: /join <channel>", Color.YELLOW);
                         } else if (cmd[0].equals("/quit")) {
                             break;
+                        } else if (cmd[0].equals("/timestamp")) {
+                            showTimestamp = !showTimestamp;
+                            server.syncClient(this, channel);
                         } else if (cmd[0].equals("/help")) {
                             String help = "List available commands:\n";
-                            help = help + "- /help\n";
-                            help = help + "\tlist available commands\n";
-                            help = help + "- /users\n";
-                            help = help + "\tlist users in the current channel\n";
-                            help = help + "- /whisper\n";
-                            help = help + "\twhisper to other user\n";
-                            help = help + "- /join\n";
-                            help = help + "\tjoin a channel\n";
-                            help = help + "- /color\n";
-                            help = help + "\tchange name color\n";
-                            help = help + "- /quit\n";
-                            help = help + "\tleave chat and disconnect\n";
+                            help += "- /help\n";
+                            help += "\tlist available commands\n";
+                            help += "- /users\n";
+                            help += "\tlist users in the current channel\n";
+                            help += "- /whisper\n";
+                            help += "\twhisper to other user\n";
+                            help += "- /join\n";
+                            help += "\tjoin a channel\n";
+                            help += "- /color\n";
+                            help += "\tchange name color\n";
+                            help += "- /timestamp\n";
+                            help += "\ttoggle messages timestamp\n";
+                            help += "- /quit\n";
+                            help += "\tleave chat and disconnect\n";
                             sendCmdMessage(help, Color.GREEN);
                         } else if (cmd[0].equals("/users")) {
                             String users = "Users in this channel:\n";
@@ -245,15 +254,18 @@ class Client extends Thread {
 class Message {
     String sender;
     String content;
+    LocalDateTime time;
     
     Message(String sender, String content) {
         this.sender = sender;
         this.content = content;
+        this.time = LocalDateTime.now();
     }
 
     Message(Message message) {
         this.sender = message.sender;
         this.content = message.content;
+        this.time = message.time;
     }
 }
 
@@ -262,13 +274,24 @@ class Server {
     String name;
     ConcurrentHashMap<String, CopyOnWriteArrayList<Message>> channels = new ConcurrentHashMap<String, CopyOnWriteArrayList<Message>>();
     Vector<Client> clients = new Vector<Client>();
+    private DateTimeFormatter _ftime;
 
     Server(int port) throws IOException {
         this.server = new ServerSocket(port);
+        this.initTimestamp();
     }
 
     Server(String host, int port) throws IOException {
         this.server = new ServerSocket(port, 256, InetAddress.getByName(host));
+        this.initTimestamp();
+    }
+
+    private void initTimestamp() {
+        String ftime = System.getenv("RASPBERRY_TIMESTAMP_FORMAT"); // default: dd-MM-yyyy HH:mm:ss
+        if (ftime == null)
+            _ftime = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+        else
+            _ftime = DateTimeFormatter.ofPattern(ftime);
     }
 
     int getChannelPeerCount(String channel) {
@@ -356,7 +379,7 @@ class Server {
             if (message.sender.equals("Server"))
                 messages = messages + Colorizer.color(message.content + "\n", Color.YELLOW);
             else
-                messages = messages + String.format("%s: %s\n", message.sender, message.content);
+                messages = messages + String.format("%s%s: %s\n", client.showTimestamp ? Colorizer.color(message.time.format(_ftime) + " ", Color.BLACK_BRIGHT) : "", message.sender, message.content);
         }
         messages = messages + String.format("\n\n\n%s%s(%s) [#%s (online: %s)]\nType your message: ",
             client.cmdMessage != null ? client.cmdMessageColor != null ? Colorizer.color(client.cmdMessage + "\n", client.cmdMessageColor) : client.cmdMessage + "\n" : "",
