@@ -7,14 +7,6 @@ package io.github.kamilszewc.javaansitextcolorizer;
  */
 public class Colorizer {
 
-    static boolean isSystemSupported = true;
-    static {
-        final String osName = System.getProperty("os.name");
-        if (osName.startsWith("Windows")) {
-            if (!osName.endsWith("11")) isSystemSupported = false;
-        }
-    }
-
     /**
      * Ansi colors of text
      */
@@ -127,11 +119,7 @@ public class Colorizer {
      * @return Colored text
      */
     public static String color(String text, Color color) {
-        if (isSystemSupported) {
-            return color.toString() + text + Color.RESET;
-        } else {
-            return text;
-        }
+        return color.toString() + text + Color.RESET;
     }
 
     /**
@@ -141,10 +129,6 @@ public class Colorizer {
      * @return Colored text
      */
     public static String color(String text, BackgroundColor backgroundColor) {
-        if (isSystemSupported) {
-            return backgroundColor.toString() + text + Color.RESET;
-        } else {
-            return text;
-        }
+        return backgroundColor.toString() + text + Color.RESET;
     }
 }

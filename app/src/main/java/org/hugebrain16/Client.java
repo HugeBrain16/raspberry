@@ -238,7 +238,7 @@ public class Client extends Thread {
                                 target.updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
                             } else {
                                 sendCmdMessage("Can't no longer reach the target, whisper disabled.", Color.YELLOW);
-                                mode = Mode.WHISPER;
+                                mode = Mode.CHAT;
                                 whisper = null;
                             }
                         }
