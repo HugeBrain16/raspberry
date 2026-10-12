@@ -31,10 +31,10 @@ public class Server {
     Server(String host, int port, boolean secure) throws IOException {
         if (!secure) {
             _serverfactory = ServerSocketFactory.getDefault();
-            this._server = _serverfactory.createServerSocket(port);
+            this._server = _serverfactory.createServerSocket();
             this._init = true;
         } else if (secure && loadKeyStore()) {
-            this._server = _serverfactory.createServerSocket(port);
+            this._server = _serverfactory.createServerSocket();
             this._init = true;
         }
 
