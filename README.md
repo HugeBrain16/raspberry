@@ -47,20 +47,17 @@ Connect to the server normally. When asked for username, type "rcon" (case insen
 
 ## How to setup SSL server
 
-import keystore
-
-> [!IMPORTANT]
-> The keystore only imports **PKCS12**
-
-convert .pem to .p12
+You need to convert whatever certificate files you have to a .p12 or .pfx file (PKCS#12)  
+for example with .pem:  
 ```sh
 openssl pkcs12 -export -in cert.pem -inkey privkey.pem -out key.p12
 ```
 
-set RASPBERRY_SSL_KEYSTORE to the .p12 file path  
-set RASPBERRY_SSL_PASSWORD if password is required  
-set RASPBERRY_SSL_PORT (optional, see Configurations)  
-set RASPBERRY_SSL_ONLY to true if you want to only start the ssl server  
+Then set the following env vars:
+- RASPBERRY_SSL_KEYSTORE to the .p12/.pfx file path  
+- RASPBERRY_SSL_PASSWORD if password is required to import the keystore  
+- RASPBERRY_SSL_PORT (optional, see Configurations)  
+- RASPBERRY_SSL_ONLY to true if you want to only start the ssl server  
 
 ## Configurations
 
