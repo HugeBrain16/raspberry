@@ -59,7 +59,7 @@ openssl pkcs12 -export -in cert.pem -inkey privkey.pem -out key.p12
 
 set RASPBERRY_SSL_KEYSTORE to the .p12 file path  
 set RASPBERRY_SSL_PASSWORD if password is required  
-set RASPBERRY_SSL_PORT  
+set RASPBERRY_SSL_PORT (optional, see Configurations)  
 set RASPBERRY_SSL_ONLY to true if you want to only start the ssl server  
 
 ## Configurations
