@@ -149,7 +149,7 @@ public class Instance extends Thread {
                 Colorizer.color("@" + client.username, Color.YELLOW));
 
             if (message.sender.equals("Server"))
-                messages = messages + Colorizer.color(message.content + "\n", Color.YELLOW);
+                messages = messages + (client.showTimestamp ? Colorizer.color(message.time.format(_ftime) + " ", Color.BLACK_BRIGHT) : "") + Colorizer.color(message.content + "\n", Color.YELLOW);
             else if (message.sender.equals("MOTD"))
                 messages = messages + message.content + "\n";
             else

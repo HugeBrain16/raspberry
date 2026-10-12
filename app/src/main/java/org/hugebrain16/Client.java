@@ -255,11 +255,6 @@ public class Client extends Thread {
                     }
                 }
             }
-
-            instance.updateMessage(channel, "Server", String.format("%s has left the chat", username));
-            socket.close();
-
-            instance.clients.remove(this);
         } catch(Exception e) {
             System.out.printf("Client thread error: %s\n", e.getMessage() != null ? e.getMessage() : e);
         } finally {
