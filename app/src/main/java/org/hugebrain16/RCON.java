@@ -33,12 +33,13 @@ public class RCON extends Thread {
 
     public void run() {
         try {
+            Instance instance = server.getInstance();
             BufferedReader streamIn = getReader();
             PrintWriter streamOut = getWriter();
 
             streamOut.write("RCON Ready! type /help for list of commands.\n");
             streamOut.flush();
-            while (!server.server.isClosed()) {
+            while (!server.getServerSocket().isClosed()) {
                 streamOut.write("> ");
                 streamOut.flush();
                 String message = streamIn.readLine();
@@ -56,20 +57,20 @@ public class RCON extends Thread {
                     if (cmd[0].equals("/shutdown")) {
                         streamOut.write("Shutting down...\n");
                         streamOut.flush();
-                        server.server.close();
+                        server.getServerSocket().close();
                     } else if (cmd[0].equals("/channels")) {
-                        if (server.channels.isEmpty()) {
+                        if (instance.channels.isEmpty()) {
                             streamOut.write("No active channels.\n");
                             streamOut.flush();
                             continue;
                         }
 
                         streamOut.write("List of active channels:\n");
-                        server.channels.forEach((key, val) -> {
+                        instance.channels.forEach((key, val) -> {
                             String line = "- " + key;
                             line += " (";
 
-                            line += "users: " + server.getChannelPeerCount(key) + ", ";
+                            line += "users: " + instance.getChannelPeerCount(key) + ", ";
                             line += "messages: " + val.size();
 
                             line += ")\n";
@@ -77,14 +78,14 @@ public class RCON extends Thread {
                         });
                         streamOut.flush();
                     } else if (cmd[0].equals("/users")) {
-                        if (server.clients.isEmpty()) {
+                        if (instance.clients.isEmpty()) {
                             streamOut.write("No active users.\n");
                             streamOut.flush();
                             continue;
                         }
 
                         streamOut.write("List of active users:\n");
-                        for (Client client : server.clients) {
+                        for (Client client : instance.clients) {
                             String line = "- " + Util.paint(client.username, client.color);
                             line += " (";
 

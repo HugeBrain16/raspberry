@@ -58,12 +58,16 @@ public class Client extends Thread {
     }
 
     void sendCmdMessage(String message, Color color) {
+        Instance instance = server.getInstance();
+
         cmdMessage = message;
         cmdMessageColor = color;
-        server.syncClient(this, channel);
+        instance.syncClient(this, channel);
     }
 
     void updateMessage(String sender, String content) {
+        Instance instance = server.getInstance();
+
         int maxBuffer;
         try {
             maxBuffer = Integer.parseInt(System.getenv("RASPBERRY_MESSAGE_FREE_THRESHOLD")); // default: 50
@@ -79,7 +83,7 @@ public class Client extends Thread {
             message.remove(0);
 
         message.add(new Message(sender, content));
-        server.syncClient(this, channel);
+        instance.syncClient(this, channel);
     }
 
     String getModeString() {
@@ -92,6 +96,8 @@ public class Client extends Thread {
     }
 
     public void run() {
+        Instance instance = server.getInstance();
+
         try {
             int maxMessage;
             long maxRate;
@@ -103,13 +109,13 @@ public class Client extends Thread {
                 maxRate = 100;
             }
 
-            String motd = server.readMotd();
+            String motd = instance.readMotd();
             if (motd != null)
                 updateMessage("MOTD", motd);
-            server.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
+            instance.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
             updateMessage("Server", "type /help to see all available commands");
 
-            while (!server.server.isClosed()) {
+            while (!server.getServerSocket().isClosed()) {
                 BufferedReader streamIn = getReader();
 
                 String message = streamIn.readLine();
@@ -136,9 +142,9 @@ public class Client extends Thread {
                         if (cmd[0].equals("/join")) {
                             if (cmd.length > 1) {
                                 if (cmd[1].matches("^[a-zA-Z0-9_\\-\\.]+$")) {
-                                    server.updateMessage(channel, "Server", String.format("%s has left the chat", username));
+                                    instance.updateMessage(channel, "Server", String.format("%s has left the chat", username));
                                     channel = cmd[1];
-                                    server.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
+                                    instance.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
                                 } else {
                                     sendCmdMessage("Invalid channel name", Color.RED);
                                 }
@@ -148,7 +154,7 @@ public class Client extends Thread {
                             break;
                         } else if (cmd[0].equals("/timestamp")) {
                             showTimestamp = !showTimestamp;
-                            server.syncClient(this, channel);
+                            instance.syncClient(this, channel);
                         } else if (cmd[0].equals("/refresh")) {
                             sendCmdMessage("", Color.YELLOW);
                         } else if (cmd[0].equals("/help")) {
@@ -173,7 +179,7 @@ public class Client extends Thread {
                         } else if (cmd[0].equals("/users")) {
                             String users = "Users in this channel:\n";
                             
-                            for (Client client : server.clients) {
+                            for (Client client : instance.clients) {
                                 if (client.channel.equals(channel))
                                     users = users + "- " + client.username + "\n";
                             }
@@ -181,7 +187,7 @@ public class Client extends Thread {
                             sendCmdMessage(users, Color.GREEN);
                         } else if (cmd[0].equals("/whisper")) {
                             if (cmd.length > 1) {
-                                Client client = server.getClientByUsername(cmd[1], channel);
+                                Client client = instance.getClientByUsername(cmd[1], channel);
 
                                 if (client == this) {
                                     sendCmdMessage("Can't whisper to self", Color.YELLOW);
@@ -230,9 +236,9 @@ public class Client extends Thread {
                             sendCmdMessage("Unknown command: " + cmd[0], Color.YELLOW);
                     } else {
                         if (mode == Mode.CHAT) {
-                            server.updateMessage(channel, Util.paint(username, color), message);
+                            instance.updateMessage(channel, Util.paint(username, color), message);
                         } else if (mode == Mode.WHISPER) {
-                            Client target = server.getClientByUsername(whisper, channel);
+                            Client target = instance.getClientByUsername(whisper, channel);
                             if (target != null) {
                                 updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
                                 target.updateMessage(String.format("[whisper] %s", Util.paint(username, color)), message);
@@ -250,18 +256,18 @@ public class Client extends Thread {
                 }
             }
 
-            server.updateMessage(channel, "Server", String.format("%s has left the chat", username));
+            instance.updateMessage(channel, "Server", String.format("%s has left the chat", username));
             socket.close();
 
-            server.clients.remove(this);
+            instance.clients.remove(this);
         } catch(Exception e) {
             System.out.printf("Client thread error: %s\n", e.getMessage() != null ? e.getMessage() : e);
         } finally {
-            server.clients.remove(this);
+            instance.clients.remove(this);
             try {
                 socket.close();
             } catch (Exception e) {}
-            server.updateMessage(channel, "Server", String.format("%s has left the chat", username));
+            instance.updateMessage(channel, "Server", String.format("%s has left the chat", username));
         }
     }
 }

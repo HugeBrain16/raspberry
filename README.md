@@ -10,7 +10,7 @@ A tiny TCP chat server (made for use with netcat/ncat/socat and other similar to
 Features:
 - Basic chat functionality (multi-threaded)
 - Choose username (supports user mention highlight f.e. @user)
-- Join any channel (`/join channel>`)
+- Join any channel (`/join <channel>`)
 - Color customization (`/color <color>`)
 - Whisper to a user (`/whisper <user>`)
 
@@ -45,6 +45,23 @@ java -jar app/build/libs/raspberry.jar
 
 Connect to the server normally. When asked for username, type "rcon" (case insensitive). Enter RCON password.
 
+## How to setup SSL server
+
+import keystore
+
+> [!IMPORTANT]
+> The keystore only imports **PKCS12**
+
+convert .pem to .p12
+```sh
+openssl pkcs12 -export -in cert.pem -inkey privkey.pem -out key.p12
+```
+
+set RASPBERRY_SSL_KEYSTORE to the .p12 file path  
+set RASPBERRY_SSL_PASSWORD if password is required  
+set RASPBERRY_SSL_PORT  
+set RASPBERRY_SSL_ONLY to true if you want to only start the ssl server  
+
 ## Configurations
 
 Environment variables:
@@ -59,3 +76,7 @@ Environment variables:
 - `RASPBERRY_TIMESTAMP_FORMAT` default: "dd-MM-yyyy HH:mm:ss"
 - `RASPBERRY_MOTD` path to motd file
 - `RASPBERRY_RCON_PASSWORD` set this to allow RCON login
+- `RASPBERRY_SSL_KEYSTORE` path to ssl keystore file
+- `RASPBERRY_SSL_PASSWORD` password for the keystore
+- `RASPBERRY_SSL_PORT` default: RASPBERRY_PORT + 1
+- `RASPBERRY_SSL_ONLY` only start ssl server, non-secure server won't start.

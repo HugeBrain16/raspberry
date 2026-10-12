@@ -25,6 +25,7 @@ public class Incoming extends Thread {
         }
 
         try {
+            Instance instance = server.getInstance();
             boolean nameCheck = false;
             boolean nameValid = false;
             boolean nameLength = false;
@@ -53,7 +54,7 @@ public class Incoming extends Thread {
                     rconPass = false;
                 }
 
-                streamOut.write(String.format("%s (Raspberry v%s)\nEnter username: ", server.name != null ? server.name : "Raspberry chat server", App.getVersion()));
+                streamOut.write(String.format("%s (Raspberry v%s)\nEnter username: ", instance.name != null ? instance.name : "Raspberry chat server", App.getVersion()));
                 streamOut.flush();
 
                 String username = streamIn.readLine();
@@ -71,7 +72,7 @@ public class Incoming extends Thread {
                     continue;
                 }
 
-                if (!username.isEmpty() && !server.checkUsername(username)) {
+                if (!username.isEmpty() && !instance.checkUsername(username)) {
                     client.username = username;
 
                     if (channel != null)
@@ -106,7 +107,7 @@ public class Incoming extends Thread {
                         client.socket.close();
                     }
                 } else {
-                    server.clients.add(client);
+                    instance.clients.add(client);
                     client.start();
                 }
             } else
