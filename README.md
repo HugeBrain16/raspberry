@@ -1,6 +1,6 @@
 # Raspberry
 
-![screens](https://i.imgur.com/sbK6k7y.jpeg)
+![screens](https://i.imgur.com/Ojf4dhN.png)
 
 A tiny TCP chat server (made for use with netcat/ncat/socat and other similar tools)
 
