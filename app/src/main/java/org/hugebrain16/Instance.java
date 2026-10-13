@@ -43,9 +43,7 @@ public class Instance extends Thread {
             File motd = new File(_motd);
             if (!motd.exists())
                 motd.createNewFile();
-            if (!motd.isFile())
-                return null;
-            if (!motd.setReadable(true))
+            if (!motd.isFile() || !motd.canRead())
                 return null;
 
             FileInputStream stream = new FileInputStream(motd);

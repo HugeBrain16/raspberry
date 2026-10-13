@@ -110,23 +110,17 @@ public class Client extends Thread {
         Instance instance = server.getInstance();
 
         try {
+            instance.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
+
             String motd = instance.readMotd();
             if (motd != null)
                 updateMessage("MOTD", motd);
-            instance.updateMessage(channel, "Server", String.format("%s has joined the chat", username));
-            updateMessage("Server", "type /help to see all available commands");
+            // updateMessage("Server", "type /help to see all available commands");
 
             while (!server.getServerSocket().isClosed()) {
                 BufferedReader streamIn = getReader();
 
                 String message = streamIn.readLine();
-                long now = System.currentTimeMillis();
-                if (now - lastMessage < maxRate) {
-                    sendCmdMessage("Slow down!", Color.RED);
-                    continue;
-                }
-                lastMessage = now;
-
                 if (message == null)
                     break;
 
@@ -236,6 +230,13 @@ public class Client extends Thread {
                         } else
                             sendCmdMessage("Unknown command: " + cmd[0], Color.YELLOW);
                     } else {
+                        long now = System.currentTimeMillis();
+                        if (now - lastMessage < maxRate) {
+                            sendCmdMessage("Slow down!", Color.RED);
+                            continue;
+                        }
+                        lastMessage = now;
+
                         if (mode == Mode.CHAT) {
                             instance.updateMessage(channel, Util.paint(username, color), message);
                         } else if (mode == Mode.WHISPER) {
