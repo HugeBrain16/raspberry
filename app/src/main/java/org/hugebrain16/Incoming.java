@@ -1,7 +1,7 @@
 package org.hugebrain16;
 
 import java.io.BufferedReader;
-import java.io.PrintWriter;
+import java.io.BufferedWriter;
 
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer;
 import io.github.kamilszewc.javaansitextcolorizer.Colorizer.Color;
@@ -31,7 +31,7 @@ public class Incoming extends Thread {
             boolean nameLength = false;
             boolean rconPass = false;
             BufferedReader streamIn = client.getReader();
-            PrintWriter streamOut = client.getWriter();
+            BufferedWriter streamOut = client.getWriter();
             while (client.username == null) {
                 client.clearScreen(streamOut);
                 if (nameValid) {

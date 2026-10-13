@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.BufferedWriter;
 import java.time.format.DateTimeFormatter;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,8 +21,13 @@ public class Instance extends Thread {
     private DateTimeFormatter _ftime;
     private String _motd = System.getenv("RASPBERRY_MOTD");
     private boolean _init = false;
+    private int maxBuffer = 50;
 
     Instance() throws IOException {
+        try {
+            maxBuffer = Integer.parseInt(System.getenv("RASPBERRY_MESSAGE_FREE_THRESHOLD")); // default: 50
+        } catch(NumberFormatException e) {}
+
         this.initTimestamp();
     }
 
@@ -96,13 +101,6 @@ public class Instance extends Thread {
     }
 
     void updateMessage(String channel, String sender, String content) {
-        int maxBuffer;
-        try {
-            maxBuffer = Integer.parseInt(System.getenv("RASPBERRY_MESSAGE_FREE_THRESHOLD")); // default: 50
-        } catch(NumberFormatException e) {
-            maxBuffer = 50;
-        }
-        
         if (!channels.containsKey(channel))
             channels.put(channel, new CopyOnWriteArrayList<Message>());
 
@@ -162,7 +160,7 @@ public class Instance extends Thread {
             Colorizer.color(Integer.toString(getChannelPeerCount(channel)), Color.GREEN));
             
         try {
-            PrintWriter streamOut = client.getWriter();
+            BufferedWriter streamOut = client.getWriter();
             client.clearScreen(streamOut);
             streamOut.write(messages);
             streamOut.flush();

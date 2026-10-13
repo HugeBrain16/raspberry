@@ -1,16 +1,19 @@
 package org.hugebrain16;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RCON extends Thread {
     Socket socket;
     Server server;
     private BufferedReader _reader = null;
-    private PrintWriter _writer = null;
+    private BufferedWriter _writer = null;
 
     RCON(Socket socket, Server server) {
         this.socket = socket;
@@ -24,10 +27,10 @@ public class RCON extends Thread {
         return this._reader; 
     }
 
-    PrintWriter getWriter() throws IOException {
+    BufferedWriter getWriter() throws IOException {
         if (this._writer == null)
-            this._writer = new PrintWriter(socket.getOutputStream());
-    
+            this._writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
         return this._writer;
     }
 
@@ -35,7 +38,7 @@ public class RCON extends Thread {
         try {
             Instance instance = server.getInstance();
             BufferedReader streamIn = getReader();
-            PrintWriter streamOut = getWriter();
+            BufferedWriter streamOut = getWriter();
 
             streamOut.write("RCON Ready! type /help for list of commands.\n");
             streamOut.flush();
@@ -66,7 +69,10 @@ public class RCON extends Thread {
                         }
 
                         streamOut.write("List of active channels:\n");
-                        instance.channels.forEach((key, val) -> {
+                        for (Entry<String, CopyOnWriteArrayList<Message>> channel : instance.channels.entrySet()) {
+                            String key = channel.getKey();
+                            CopyOnWriteArrayList<Message> val = channel.getValue();
+
                             String line = "- " + key;
                             line += " (";
 
@@ -75,7 +81,7 @@ public class RCON extends Thread {
 
                             line += ")\n";
                             streamOut.write(line);
-                        });
+                        }
                         streamOut.flush();
                     } else if (cmd[0].equals("/users")) {
                         if (instance.clients.isEmpty()) {

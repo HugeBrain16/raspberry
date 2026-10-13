@@ -1,9 +1,10 @@
 package org.hugebrain16;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,11 +32,21 @@ public class Client extends Thread {
     long lastMessage = System.currentTimeMillis();
     ConcurrentHashMap<String, CopyOnWriteArrayList<Message>> channels = new ConcurrentHashMap<String, CopyOnWriteArrayList<Message>>();
     private BufferedReader _reader = null;
-    private PrintWriter _writer = null;
+    private BufferedWriter _writer = null;
+    private int maxMessage = 256;
+    private long maxRate = 100;
 
     Client(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
+
+        try {
+            maxMessage = Integer.parseInt(System.getenv("RASPBERRY_MAX_MESSAGE_LENGTH")); // default: 256
+        } catch(NumberFormatException e) {}
+
+        try {
+            maxRate = Long.parseLong(System.getenv("RASPBERRY_MAX_MESSAGE_RATE")); // default: 100ms
+        } catch(NumberFormatException e) {}
     }
 
     BufferedReader getReader() throws IOException {
@@ -45,16 +56,16 @@ public class Client extends Thread {
         return this._reader; 
     }
 
-    PrintWriter getWriter() throws IOException {
+    BufferedWriter getWriter() throws IOException {
         if (this._writer == null)
-            this._writer = new PrintWriter(socket.getOutputStream());
+            this._writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
     
         return this._writer;
     }
 
-    void clearScreen(PrintWriter streamOut) {
+    void clearScreen(BufferedWriter streamOut) throws IOException {
         streamOut.write("\033[2J\033[H");
-        streamOut.flush();
+        // streamOut.flush();
     }
 
     void sendCmdMessage(String message, Color color) {
@@ -99,16 +110,6 @@ public class Client extends Thread {
         Instance instance = server.getInstance();
 
         try {
-            int maxMessage;
-            long maxRate;
-            try {
-                maxMessage = Integer.parseInt(System.getenv("RASPBERRY_MAX_MESSAGE_LENGTH")); // default: 256
-                maxRate = Long.parseLong(System.getenv("RASPBERRY_MAX_MESSAGE_RATE")); // default: 100ms
-            } catch(NumberFormatException e) {
-                maxMessage = 256;
-                maxRate = 100;
-            }
-
             String motd = instance.readMotd();
             if (motd != null)
                 updateMessage("MOTD", motd);
